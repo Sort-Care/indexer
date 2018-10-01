@@ -3,6 +3,17 @@ File: invindex.py
 Function: Defines the class Indexer for reading in json file and build
           indexes for it.
 Class for building inverted index
+TODO: 
+1. Add tracking for the doc length
+For each Lists do sth!
+2. offset for writing to disk
+3. offset{List.key} = {offset, size, List.tdf, List.tcf} 
+   Where to read and hbow many bytes to read
+   size =   Write(file, offset, compressedFlag)
+   writeOffsets();
+   writeDocIds()
+4. Combine scenes into Plays
+5. WriteLengths()
 """
 
 import json
