@@ -27,6 +27,8 @@ class Indexer:
         self.cmp_index = dict()
         # a flag that indicates whether to compress or not
         self.compress = flag
+        # vbyte encoded index
+        self.vbyte_index = dict()
         # print tag
         self.verbose = verbose
 
@@ -164,7 +166,14 @@ class Indexer:
                     cnt += 1
             self.cmp_index[word].append(cnt)
             self.cmp_index[word].extend(tmp_list)
-            
+
+    def apply_vbyte(self):
+        """
+        Apply vbyte to every term's array
+        """
+        for word in self.cmp_index.keys():
+            encode_arr = self.vbyte_encoding(self.cmp_index[word])
+            self.vbyte_index[word] = encode_arr
                     
     def vbyte_encoding(self, arr):
         """
