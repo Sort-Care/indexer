@@ -29,6 +29,8 @@ class Indexer:
         self.compress = flag
         # vbyte encoded index
         self.vbyte_index = dict()
+        # vocabulary (term, term frequency)
+        self.vocabulary = dict()
         # print tag
         self.verbose = verbose
 
