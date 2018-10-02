@@ -263,7 +263,7 @@ class Indexer:
             size = write_data(bf, offset, self.cmp_index[term])
 
     def write_data(filevar, offset, lst_data):
-        pass
+        bdata = bytearray(lst_data)
             
 
 
