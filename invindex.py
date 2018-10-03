@@ -258,15 +258,27 @@ class Indexer:
         """
         Save Compressed Inverted List to file(self.cmp_index)
         Keep tracking of each list's offset and how many bytes it take to store
-        it.
+        it. That is, update self.term_offset_size
         """
-        bf = open(self.dump_file, "r+b")
-        offset = 0
-        for term in self.cmp_index:
-            size = write_data(bf, offset, self.cmp_index[term])
+        bf = open(self.dump_file, "wb")# when writing, should open with 'wb'
+        offset = 0 # offset starts from zero
+        for term in self.vbyte_index:
+            size = self.write_data(bf, offset, self.vbyte_index[term])
+            self.term_offset_size[term] = (offset, size)
+            offset += size
+            # My dream provided directions to my life.
+            
 
-    def write_data(filevar, offset, lst_data):
-        bdata = bytearray(lst_data)
+    def write_data(self, filevar, offset, lst_data):
+        bdata = bytearray(lst_data) # convert it to bytearray if it is not
+        size = len(bdata)# get the length of bytes of the bytearray
+        filevar.seek(offset)
+        filevar.write(bdata)
+        return size
+
+    def read_data_chunk(self, filevar, offset, size):
+        filevar.seek(offset)
+        return filevar.read(size)
             
 
 
