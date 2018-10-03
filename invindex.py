@@ -4,7 +4,7 @@ Function: Defines the class Indexer for reading in json file and build
           indexes for it.
 Class for building inverted index
 TODO: 
-1. Add tracking for the doc length
+1. Add tracking for the doc length -- DONE
 For each Lists do sth!
 2. offset for writing to disk
 3. offset{List.key} = {offset, size, List.tdf, List.tcf} 
@@ -23,11 +23,17 @@ from pprint import pprint
 from inv_util import *
 
 class Indexer:
-    def __init__(self, filename, flag = True, verbose = False):
+    def __init__(self,
+                 infilename,  # the file that feeds the program with json data
+                 outfilename, # the one that used for dumping indexes
+                 flag = True,
+                 verbose = False):
         # a list of scenes, each element is a dictionary
         self.scenes = None
+        # doc length
+        self.doc_length = dict()
         # json file name, which will be used in readIn() function
-        self.filename = filename
+        self.filename = infilename
         # inverted index
         self.inv_index = dict()
         # delta encoded index
@@ -42,8 +48,15 @@ class Indexer:
         self.vbyte_index = dict()
         # vocabulary (term, term frequency)
         self.vocabulary = dict()
+        # file offset and size (term, (offset, size))
+        self.term_offset_size = dict()
+        # term frequency
+        self.term_frequency = dict()
+
         # print tag
         self.verbose = verbose
+        # dump file name
+        self.dump_file = outfilename
 
 
     def build_and_save(self):
@@ -56,8 +69,8 @@ class Indexer:
         # if compress tag set to true, compress it
         if self.compress:
             self.delta_encoding()
-            self.vbyte_encoding()
             self.compact_index()
+            self.vbyte_encoding()
             self.dump_compressed_index()
         # then dump the index to file
         else:
@@ -78,9 +91,16 @@ class Indexer:
         for sce in self.scenes:
             # use sec['sceneNum'] as the
             docId = sce['sceneNum']
+            # update doc lengths ds
+            self.doc_length[docId] = len(sce['tlist'])
             # for each term in that scene:
             for i in range(len(sce['tlist'])):
                 t = sce['tlist'][i]
+                if t not in self.term_frequency:
+                    self.term_frequency[t] = 1;
+                else:
+                    self.term_frequency[t] += 1;
+                
                 if t not in self.inv_index:
                     self.inv_index[t] = []
                 self.inv_index[t].append((docId, i))
@@ -235,7 +255,19 @@ class Indexer:
         pass
 
     def dump_compressed_index(self):
-        pass
+        """
+        Save Compressed Inverted List to file(self.cmp_index)
+        Keep tracking of each list's offset and how many bytes it take to store
+        it.
+        """
+        bf = open(self.dump_file, "r+b")
+        offset = 0
+        for term in self.cmp_index:
+            size = write_data(bf, offset, self.cmp_index[term])
+
+    def write_data(filevar, offset, lst_data):
+        bdata = bytearray(lst_data)
+            
 
 
 
