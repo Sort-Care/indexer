@@ -66,8 +66,8 @@ class Indexer:
         # if compress tag set to true, compress it
         if self.compress:
             self.delta_encoding()
-            self.vbyte_encoding()
             self.compact_index()
+            self.vbyte_encoding()
             self.dump_compressed_index()
         # then dump the index to file
         else:
