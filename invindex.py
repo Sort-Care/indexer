@@ -267,6 +267,11 @@ class Indexer:
             self.term_offset_size[term] = (offset, size)
             offset += size
             # My dream provided directions to my life.
+        # close compressed binary file
+        bf.close()
+        # save offset data to file as well
+        with open('offset.json', "w") as f:
+            json.dump(self.term_offset_size, f)
             
 
     def write_data(self, filevar, offset, lst_data):
