@@ -68,7 +68,7 @@ class Indexer:
 
         # term ID
         self.termID = dict()
-        # tf table
+        # tf table ndarray
         self.tf = None
         # df array
         self.df = None
@@ -91,6 +91,17 @@ class Indexer:
                     self.df[tmid] += 1
                 self.tf[tmid][t[0]] += 1
             tmid += 1
+
+    def dump_tfdf(self):
+        with open('tf.dat', 'w') as f:
+            # dump ndarray
+            self.tf.tofile(f)
+            # read this with np.fromfile(fobj, dtype = int)
+        with open('df.dat', 'w') as f:
+            # dump list
+            self.df.tofile(f)
+            
+            
 
 
     def build_and_save(self):
