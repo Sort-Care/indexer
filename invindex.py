@@ -67,7 +67,9 @@ class Indexer:
         self.dump_file = outfilename
 
         # term ID
-        self.termID = dict()
+        self.termtoid = dict()
+        # id to term
+        self.idtoterm = dict()
         # tf table ndarray
         self.tf = None
         # df array
@@ -80,11 +82,12 @@ class Indexer:
         tmid = 0
         row_size = len(self.inv_index.keys()) # get how many terms in total
         column_size = len(self.scenes) # get how many documents
-        self.tf = np.zeros(shape = (row_size, column_size)) # build the table
-        self.df = np.zeros(row_size)
+        self.tf = np.zeros(shape = (row_size, column_size), dtype = int) # build the table
+        self.df = np.zeros(row_size, dtype = int)
         for term in self.inv_index:
             # store the tmid and term
-            self.termID[term] = tmid
+            self.termtoid[term] = tmid
+            self.idtoterm[tmid] = term
             # update the row
             for t in self.inv_index[term]: # for each tuple
                 if self.tf[tmid][t[0]] == 0: # first time increment
@@ -93,6 +96,10 @@ class Indexer:
             tmid += 1
 
     def dump_tfdf(self):
+        with open('termid.json', 'w') as f:
+            json.dump(self.termtoid, f)
+        with open('idterm.json', 'w') as f:
+            json.dump(self.idtoterm, f)
         with open('tf.dat', 'w') as f:
             # dump ndarray
             self.tf.tofile(f)
