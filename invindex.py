@@ -17,7 +17,9 @@ For each Lists do sth!
 """
 
 import json
-from pprint import pprint
+# from pprint import pprint
+import linecache
+
 
 # self-defined
 from inv_util import *
@@ -42,6 +44,8 @@ class Indexer:
         self.sce_map = dict()
         # compact index of the structure [docId, wordCount, pos1, pos2...]
         self.cmp_index = dict()
+        # uncompressed index
+        self.ucmp_index = dict()
         # a flag that indicates whether to compress or not
         self.compress = flag
         # vbyte encoded index
@@ -50,6 +54,8 @@ class Indexer:
         self.vocabulary = dict()
         # file offset and size (term, (offset, size))
         self.term_offset_size = dict()
+        # uncompressed file line number (term, linenumber)
+        self.ucmp_linenum = dict()
         # term frequency
         self.term_frequency = dict()
 
@@ -200,6 +206,38 @@ class Indexer:
             self.cmp_index[word].append(cnt)
             self.cmp_index[word].extend(tmp_list)
 
+    def process_uncompressed_index(self):
+        """
+        Transfer self.inv_index to another form
+        Target: self.uncmp_index[term] = [docid, cnt, pos1, pos2, pos3...]
+        """
+        for word in self.inv_index.keys():
+            docNum = None
+            cnt = 0
+            tmp_list = []
+            self.ucmp_index[word] = []
+            for t in self.inv_index[word]:
+                if docNum == None:
+                    docNum = t[0]
+                    cnt = 1
+                    self.ucmp_index[word].append(docNum)
+                    tmp_list.append(t[1])
+                    continue
+                if t[0] != docNum and docNum != None:
+                    self.ucmp_index[word].append(cnt)
+                    self.ucmp_index[word].extend(tmp_list)
+                    cnt = 1
+                    tmp_list = []
+                    docNum = t[0]
+
+                    self.ucmp_index[word].append(docNum)
+                    tmp_list.append(t[1])
+                else:
+                    tmp_list.append(t[1])
+                    cnt += 1
+            self.ucmp_index[word].append(cnt)
+            self.ucmp_index[word].extend(tmp_list)
+
     def apply_vbyte(self):
         """
         Apply vbyte to every term's array
@@ -252,7 +290,21 @@ class Indexer:
         return res
 
     def dump_index(self):
-        pass
+        """
+        dump uncompressed data to file
+        Data that needs to be dumped: self.inv_index
+        For this method, each list will take up a whole line in the file
+        """
+        fn = 'ucmp_' + self.dump_file
+        uf = open(fn, 'w')
+        lnum = 1
+        for word in self.ucmp_index:
+            self.ucmp_linenum[word] = lnum
+            uf.write(str(self.ucmp_index[word]) + '\n')
+            lnum += 1
+        uf.close()
+        with open('linenum.json', "w") as f:
+            json.dump(self.ucmp_linenum, f)
 
     def dump_compressed_index(self):
         """
