@@ -75,6 +75,53 @@ class Indexer:
         # df array
         self.df = None
 
+
+    def get_longest_scene(self):
+        """
+        Get the longest scene name and play name
+        """
+        # get longest scene
+        scene_max = 0
+        scene_longest = 0
+
+        scene_min = 100000
+        scene_shortest = 0
+        for did in self.doc_length:
+            if self.doc_length[did] > scene_max:
+                scene_max = self.doc_length[did]
+                scene_longest = did
+            if self.doc_length[did] < scene_min:
+                scene_min = self.doc_length[did]
+                scene_shortest = did
+        longest_name = self.sce_map[scene_longest]
+        shortest_name = self.sce_map[scene_shortest]
+
+        # get longest
+        return (longest_name, scene_max, shortest_name, scene_min)
+
+    def get_longest_play(self):
+        play_length_dic = dict()
+        for sce in self.scenes:
+            if sce['playId'] not in play_length_dic:
+                play_length_dic[sce['playId']] = self.doc_length[sce['sceneNum']]
+            else:
+                play_length_dic[sce['playId']] += self.doc_length[sce['sceneNum']]
+
+        play_max = 0
+        longest_name = None
+        
+        play_min = 100000
+        shortest_name = None
+        for play in play_length_dic:
+            if play_length_dic[play] > play_max:
+                play_max = play_length_dic[play]
+                longest_name = play
+            if play_length_dic[play] < play_min:
+                play_min = play_length_dic[play]
+                shortest_name = play
+        return (longest_name, play_max, shortest_name, play_min)
+            
+
     def count_tf_df(self):
         """
         Count term frequency and document frequency
@@ -108,7 +155,6 @@ class Indexer:
             # dump list
             self.df.tofile(f)
             
-            
 
 
     def build_and_save(self):
@@ -122,11 +168,12 @@ class Indexer:
         if self.compress:
             self.delta_encoding()
             self.compact_index()
-            self.vbyte_encoding()
+            self.apply_vbyte()
             self.dump_compressed_index()
         # then dump the index to file
         else:
-            dump_index()
+            self.process_uncompressed_index()
+            self.dump_index()
 
     def readIn(self):
         with open(self.filename) as f:
